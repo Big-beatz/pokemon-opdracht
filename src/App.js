@@ -1,48 +1,65 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
 import axios from "axios";
+import Pokemon from "./assets/components/Pokemon";
+import Button from "./assets/components/Button";
 
 function App() {
-    const [pokemonName, setPokemonName] = useState('')
-    const [sprite, setSprite] = useState('')
-    const [abilities, setAbilities] = useState([])
-    const [weight, setWeight] = useState('')
-    const [moves, setMoves] = useState('')
+    const [pokemons, setPokemons] = useState([])
+    const [endpoint, setEndpoint] = useState('https://pokeapi.co/api/v2/pokemon/')
+    const [loading, toggleLoading] = useState(false)
+    const [error, setError] = useState(false)
 
-    abilities.map(() => {})
-
-    async function fetchData(){
-        try{
-            const {data: pokemonData} = await axios.get(`https://pokeapi.co/api/v2/pokemon/bulbasaur`)
-            console.log(pokemonData)
-            setPokemonName(pokemonData.forms[0].name)
-            setSprite(pokemonData.sprites.front_default)
-            setAbilities(pokemonData.abilities)
-            setWeight(pokemonData.weight)
-            setMoves(pokemonData.moves.length)
-        }
-        catch(e){
+useEffect(() => {
+    async function fetchData() {
+        toggleLoading(true)
+        setError(false)
+        try {
+            const {data} = await axios(endpoint)
+            setPokemons(data)
+            console.log(data)
+        } catch (e) {
             console.error(e)
+            setError(true)
         }
+        toggleLoading(false)
     }
     fetchData()
+}, [endpoint])
+
 
   return (
-      <>
-        <header>
-        <h1>Pokemon!</h1>
-        </header>
-    <div>
-      <article>
-          <h2>{pokemonName}</h2>
-        <img src={sprite} alt="pokemon"/>
-        <p>Moves: {moves}</p>
-        <p>Weight: {weight}</p>
-        <p>Abilities
-        </p>
-      </article>
+
+          <div className="poke-deck">
+              {pokemons &&
+              <>
+                  <header>
+                      <h1>Pokemon!</h1>
+                  </header>
+                  <section>
+                      <Button
+                          disabled={!pokemons.previous}
+                          clickHandler={() => setEndpoint(pokemons.previous)}
+                      >
+                          Vorige
+                      </Button>
+                      <Button
+                          disabled={!pokemons.next}
+                          clickHandler={() => setEndpoint(pokemons.next)}
+                      >
+                          Volgende
+                      </Button>
+                  </section>
+                  {pokemons.results && pokemons.results.map((pokemon) => {
+                      return <Pokemon key={pokemon.name} endpoint={pokemon.url}/>
+                  })}
+
+                  {loading && <p>Loading</p>}
+                  {error && <p>error</p>}
+              </>
+              }
     </div>
-      </>
+
   );
 }
 
